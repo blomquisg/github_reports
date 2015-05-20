@@ -50,10 +50,8 @@ module GithubReports
     end
 
     def self.query(url)
-      puts "Url: #{url}"
-      response = raw_query(url)
-      puts "   rate limit: #{response.rate_limit_remaining} of #{response.rate_limit} remaining"
-      response
+      puts "Processing query #{url}"
+      raw_query(url)
     end
 
     def self.paged_query(url)
