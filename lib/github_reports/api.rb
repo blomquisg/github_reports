@@ -22,16 +22,19 @@ module GithubReports
     end
 
     def self.find_pull_requests(label = nil, state = "open")
+      puts "Finding pull requests ..."
       options = {"type" => "pr", "is" => state, "repo" => config.repo}
       options["label"] = label if label
       response = search_issues(options)
-      response.items.collect do |search_result|
+      pull_requests = response.items.collect do |search_result|
         PullRequest.new(search_result) do |pull_request|
           pull_request.init_pr(query(pull_request.pr_url).json).
             init_comments(query(pull_request.comments_url).json).
             init_review_comments(query(pull_request.review_comments_url).json)
         end
       end
+      puts "Finding pull requests ... complete"
+      pull_requests
     end
 
     private
@@ -50,7 +53,6 @@ module GithubReports
     end
 
     def self.query(url)
-      puts "Processing query #{url}"
       raw_query(url)
     end
 
