@@ -4,22 +4,21 @@ require_relative 'review_comment'
 module GithubReports
   class PullRequest
 
-    attr_accessor :number,
-                  :title,
-                  :description,
-                  :state,
-                  :submitter,
-                  :mergeable_state,
-                  :mergeable,
-                  :merged_by,
-                  :milestone,
-                  :labels,
-                  :comments,
-                  :review_comments,
-                  :issue_url,
-                  :pr_url,
-                  :comments_url,
-                  :review_comments_url
+    attr_reader :number,
+                :title,
+                :description,
+                :state,
+                :submitter,
+                :mergeable_state,
+                :merged_by,
+                :milestone,
+                :labels,
+                :comments,
+                :review_comments,
+                :issue_url,
+                :pr_url,
+                :comments_url,
+                :review_comments_url
 
     def initialize(search_results)
       @number      = search_results["number"]
@@ -33,6 +32,7 @@ module GithubReports
       @issue_url    = search_results["url"]
       @pr_url       = search_results["pull_request"]["url"]
       @comments_url = search_results["comments_url"]
+      yield self if block_given?
     end
 
     def init_pr(pr_results)
@@ -44,14 +44,14 @@ module GithubReports
 
     def init_comments(comments_results)
       @comments = comments_results.collect do |comment_results|
-        GithubReports::Models::Comment.new(comment_results)
+        Comment.new(comment_results)
       end
       self
     end
 
     def init_review_comments(review_comments_results)
       @review_comments = review_comments_results.collect do |review_comment_results|
-        GithubReports::Models::ReviewComment.new(review_comment_results)
+        ReviewComment.new(review_comment_results)
       end
       self
     end
@@ -60,6 +60,9 @@ module GithubReports
       review_comments.select(&:open?).size
     end
 
+    def mergeable?
+      !!@mergeable
+    end
     private
 
     def parse_submitter(submitter_hash)

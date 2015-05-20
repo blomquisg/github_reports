@@ -1,0 +1,11 @@
+---
+# github api server
+:host: https://api.github.com
+
+# github repo
+:repo: owner/repository
+
+# github username and password (optional)
+# if left blank, then all queries will be anonymous
+# :username: username
+# :password: password

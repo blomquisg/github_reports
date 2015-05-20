@@ -1,5 +1,7 @@
 require 'rest-client'
 require_relative 'api/models'
+require_relative 'response'
+require_relative 'paged_response'
 
 RESULTS_PER_PAGE = 100
 MAX_RESULTS = 200
@@ -15,18 +17,20 @@ module GithubReports
   end
 
   module Api
-    HOST = "https://api.github.com/"
-    REPO = "ManageIQ/manageiq"
+    def self.config
+      GithubReports::Config.instance
+    end
 
     def self.find_pull_requests(label = nil, state = "open")
-      options = {"type" => "pr", "is" => state, "repo" => REPO}
+      options = {"type" => "pr", "is" => state, "repo" => config.repo}
       options["label"] = label if label
       response = search_issues(options)
       response.items.collect do |search_result|
-        GithubReports::Models::PullRequest.new(search_result).
-            init_pr(query(pull_request.pr_url)).
-            init_comments(query(pull_request.comments_url)).
-            init_review_comments(query(pull_request.review_comments_url))
+        PullRequest.new(search_result) do |pull_request|
+          pull_request.init_pr(query(pull_request.pr_url).json).
+            init_comments(query(pull_request.comments_url).json).
+            init_review_comments(query(pull_request.review_comments_url).json)
+        end
       end
     end
 
@@ -36,18 +40,25 @@ module GithubReports
     # https://developer.github.com/v3/search/#search-issues
     ISSUE_SEARCH_KEYS = %w(type is repo mentions label)
     def self.search_issues(options = {})
-      uri = "#{HOST}/search/issues"
-      query = []
-      options.each.collect do |key, value|
+      url = "#{config.host}/search/issues"
+      q = options.each.collect do |key, value|
         next unless ISSUE_SEARCH_KEYS.include? key
         "#{key}:#{value}"
       end.join("+")
-      uri = "#{uri}?q=#{query}"
-      response = query(uri)
+      url = "#{url}?q=#{q}"
+      response = paged_query(url)
     end
 
     def self.query(url)
-      response = process_query(url)
+      puts "Url: #{url}"
+      response = raw_query(url)
+      puts "   rate limit: #{response.rate_limit_remaining} of #{response.rate_limit} remaining"
+      response
+    end
+
+    def self.paged_query(url)
+      url = add_results_per_page_param(url, RESULTS_PER_PAGE)
+      response = query(url).extend GithubReports::PagedResponse
 
       # bail on total count before trying to process any pages
       total_count = response.total_count
@@ -56,15 +67,25 @@ module GithubReports
       # collect all pages
       combined_response = response
       while response.has_next_page?
-        response = process_query(response.next_page)
-        combined_response.append(response)
+        combined_response.append(query(response.next_page))
       end
       combined_response
     end
 
-    def self.process_query(url)
-      uri = add_results_per_page_param(uri, RESULTS_PER_PAGE)
-      response = RestClient.get(url, {:accept => "application/vnd.github.v3+json"}) do |response, result, request, &block|
+    def self.add_results_per_page_param(url, per_page)
+      separator = url.include?("?") ? "&" : "?"
+      "#{url}#{separator}per_page=#{per_page}"
+    end
+
+    def self.raw_query(url)
+      # since this is a reporting lib, the only method will be :get
+      params = {:url => url, :method => :get}
+      if config.username && config.password
+        params[:user] = config.username
+        params[:password] = config.password
+      end
+      params[:headers] = headers
+      RestClient::Request.execute(params) do |response, result, request, &block|
         if (200..207).include? response.code
           response.extend GithubReports::Response
         else
@@ -73,9 +94,8 @@ module GithubReports
       end
     end
 
-    def self.add_results_per_page_param(uri, per_page)
-      separator = uri.include?("?") ? "&" : "?"
-      "#{uri}#{separator}per_page=#{per_page}"
+    def self.headers
+      {:accept => "application/vnd.github.v3+json"}
     end
   end
 end

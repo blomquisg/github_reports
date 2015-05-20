@@ -7,7 +7,7 @@ module GithubReports
     end
 
     def open?
-      !@position.nil?
+      !!@position
     end
   end
 end
