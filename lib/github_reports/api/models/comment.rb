@@ -1,6 +1,6 @@
 module GithubReports
   class Comment
-    attr_reader :body, :user, :url
+    attr_reader :body, :user, :url, :created_at
 
     def initialize(comment_results)
       @body       = comment_results["body"]
