@@ -2,6 +2,7 @@ require 'rest-client'
 require 'yaml'
 require 'singleton'
 require_relative 'github_reports/api'
+require_relative 'github_reports/runner'
 
 module GithubReports
   DEFAULT_CONFIG_FILE = '../config.yaml'
