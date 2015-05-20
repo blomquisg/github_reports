@@ -7,6 +7,7 @@ module GithubReports
     attr_reader :number,
                 :title,
                 :description,
+                :url,
                 :state,
                 :submitter,
                 :mergeable_state,
@@ -25,6 +26,7 @@ module GithubReports
       @title       = search_results["title"]
       @description = search_results["body"]
       @state       = search_results["state"]
+      @url         = search_results["pull_request"]["html_url"]
 
       @submitter = parse_submitter(search_results["user"])
       @labels    = parse_labels(search_results["labels"])

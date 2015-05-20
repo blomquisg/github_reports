@@ -1,8 +1,7 @@
 <% @report_model[:pull_requests].each do |pull_request| -%>
-	Pull Request <%= pull_request.number %>: <%= pull_request.title %>
-	  * Mergeable: <%= pull_request.mergeable? %>
-	  * Open review comments: <%= pull_request.open_review_comments_count %>
-	  * Last comment on <%= pull_request.comments.last.created_at %>: <%= pull_request.comments.last.body %>
-
+Pull Request <%= pull_request.number %>: <%= pull_request.title %> (<%= pull_request.url %>)
+    * Mergeable: <%= pull_request.mergeable? %>
+    * Open review comments: <%= pull_request.open_review_comments_count %>
+    * Last comment on <%= pull_request.comments.last.created_at %>: <%= pull_request.comments.last.body %>
 
 <% end -%>
