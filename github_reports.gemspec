@@ -10,10 +10,14 @@ Gem::Specification.new do |spec|
   spec.test_file = "test/test_github_reports.rb"
   spec.files = Dir["**/*"].delete_if {|item| item.include?("git") }
 
+  spec.bindir = "bin"
+  spec.executables = "github_report_runner"
+
   spec.extra_rdoc_files = ["CHANGES", "README.md"]
 
   spec.add_dependency("json")
   spec.add_dependency("rest-client")
+  spec.add_dependency("erubis")
 
   spec.description = <<-EOF
     GithubReports is a library for creating various reports against a Github repository.
