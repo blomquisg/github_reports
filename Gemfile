@@ -6,4 +6,6 @@ gem 'erubis'
 
 gem 'github_reports', :path => "."
 
-gem 'byebug'
+group :dev do
+  gem 'byebug'
+end
