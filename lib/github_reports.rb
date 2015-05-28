@@ -5,6 +5,15 @@ require_relative 'github_reports/api'
 require_relative 'github_reports/runner'
 
 module GithubReports
+  def self.reports_dir
+    # what should this be if it's not running in bundler?
+    if defined? Bundler
+      "reports/"
+    else
+      ""
+    end
+  end
+
   DEFAULT_CONFIG_FILE = '../config.yaml'
 
   class Config
